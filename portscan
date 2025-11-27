@@ -1,0 +1,38 @@
+#!/usr/bin/env python3
+import sys
+import os
+
+# Добавляем текущую директорию в путь чтобы импортировать наши модули
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+
+from console_query_parser import ConsoleQueryParser
+from scanner import PortScanner
+
+def main():
+    try:
+        # Парсим аргументы командной строки (первый аргумент - "portscan")
+        console_query = ConsoleQueryParser.convert_args_to_console_query(sys.argv)
+
+        # Создаем сканер
+        scanner = PortScanner(
+            timeout=console_query.options.timeout,
+            verbose=console_query.options.verbose,
+            guess=console_query.options.guess,
+            num_threads=console_query.options.num_threads
+        )
+
+        # Выполняем сканирование
+        results = scanner.scan(console_query.ip_address, console_query.ports)
+
+        # Выводим результаты
+        scanner.print_results(results)
+
+    except KeyboardInterrupt:
+        print("\nScan interrupted by user")
+        sys.exit(1)
+    except Exception as e:
+        print(f"Error: {e}")
+        sys.exit(1)
+
+if __name__ == "__main__":
+    main()
