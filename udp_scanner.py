@@ -1,6 +1,6 @@
 from scapy.all import IP, UDP, TCP, Raw, sr1, ICMP  # type: ignore
 import time
-from constants import ScanResult
+from scan_result import ScanResult
 
 
 class UDPScapyScanner:
@@ -61,6 +61,3 @@ class UDPScapyScanner:
             is_open=True,  # По умолчанию считаем открытым
             response_time=0,
         )
-
-    def close(self):
-        pass

@@ -1,6 +1,6 @@
 from scapy.all import IP, TCP, UDP, ICMP, send, sr1  # type: ignore
 import time
-from constants import ScanResult
+from scan_result import ScanResult
 
 
 class TCPScapyScanner:
@@ -57,6 +57,3 @@ class TCPScapyScanner:
     def scan_ports(self, target_ip: str, ports: list[int]) -> list[ScanResult]:
         return [self.scan_port(target_ip, port) for port in ports]
 
-    def close(self):
-        # Scapy не требует явного закрытия
-        pass

@@ -1,4 +1,4 @@
-from constants import ScanResult
+from scan_result import ScanResult
 from tcp_scanner import TCPScapyScanner
 from udp_scanner import UDPScapyScanner
 from protocol_detector import ProtocolDetector
@@ -13,7 +13,6 @@ class PortScanner:
         self.guess = guess
         self.num_threads = num_threads
 
-        # Используем scapy сканеры
         self.tcp_scanner = TCPScapyScanner(timeout, verbose)
         self.udp_scanner = UDPScapyScanner(timeout, verbose)
         self.protocol_detector = ProtocolDetector(timeout)
@@ -50,24 +49,18 @@ class PortScanner:
         results = []
 
         with ThreadPoolExecutor(max_workers=self.num_threads) as executor:
-            # Создаем future для каждого порта
             future_to_port = {
                 executor.submit(self._scan_single_port, target_ip, port_spec): port_spec
                 for port_spec in ports
             }
 
-            # Собираем результаты по мере завершения
-            completed = 0
-
             for future in as_completed(future_to_port):
                 try:
                     result = future.result()
                     results.append(result)
-                    completed += 1
 
                 except Exception as e:
                     port_spec = future_to_port[future]
-                    # Добавляем результат с ошибкой
                     results.append(
                         ScanResult(
                             protocol="TCP" if not port_spec.is_udp_protocol else "UDP",
@@ -105,29 +98,18 @@ class PortScanner:
         """Вывод результатов в требуемом формате"""
         open_ports = [r for r in results if r.is_open]
 
-        # Сортируем результаты: сначала TCP, потом UDP, по номеру порта
         open_ports.sort(key=lambda x: (x.protocol != "TCP", x.port))
 
-        # Выводим открытые порты
         for result in open_ports:
             output = f"{result.protocol} {result.port}"
 
-            # Добавляем время ответа если verbose режим и есть время
             if self.verbose and result.response_time > 0:
                 output += f" {result.response_time:.1f}ms"
 
-            # Добавляем протокол если guess режим
             if self.guess:
                 output += f" {result.app_protocol}"
 
             print(output)
-
-        if not open_ports:
-            if self.verbose:
-                print("No open ports found")
-            else:
-                # В не-verbose режиме ничего не выводим если нет открытых портов
-                pass
 
     @staticmethod
     def get_scan_summary(results: list[ScanResult]) -> dict:
@@ -147,7 +129,3 @@ class PortScanner:
             "open_ports_list": open_ports,
         }
 
-    def close(self):
-        """Закрытие ресурсов"""
-        self.tcp_scanner.close()
-        self.udp_scanner.close()
