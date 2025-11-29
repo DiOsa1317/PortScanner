@@ -1,4 +1,4 @@
-from console_query_classes import ConsoleQuery, Options, Port
+from src.console_query_classes import ConsoleQuery, Options, Port
 
 
 class ConsoleQueryParser:
@@ -7,7 +7,7 @@ class ConsoleQueryParser:
     def convert_args_to_console_query(arguments):
 
         if len(arguments) < 3:
-            raise ValueError("Usage: portscan [OPTIONS] IP_ADDRESS [PORT_SPECS...]")
+            raise ValueError("Usage: portscan.py [OPTIONS] IP_ADDRESS [PORT_SPECS...]")
 
         arg_len = len(arguments)
         timeout = 2.0
@@ -15,7 +15,7 @@ class ConsoleQueryParser:
         verbose = False
         guess = False
         if "portscan" not in arguments[0]:
-            raise ValueError("Usage: portscan [OPTIONS] IP_ADDRESS [PORT_SPECS...]")
+            raise ValueError("Usage: portscan.py [OPTIONS] IP_ADDRESS [PORT_SPECS...]")
         arg_index = 1
 
         positional_args = []

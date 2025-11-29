@@ -1,6 +1,6 @@
 from scapy.all import IP, TCP, UDP, ICMP, send, sr1  # type: ignore
 import time
-from scan_result import ScanResult
+from src.scan_result import ScanResult
 
 
 class TCPScapyScanner:

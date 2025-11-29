@@ -1,21 +1,26 @@
 [tool.poetry]
-name = "hw3"
+name = "PortScanner"
 version = "0.1.0"
 description = ""
 authors = ["Diliya"]
+packages = [
+    {include = "src", from = "."}
+]
 
 [tool.poetry.dependencies]
-python = ">=3.9"
+python = ">=3.9, <4"
 requests = "^2.28.0"
 pydantic = "^2.12.5"
+scapy = "^2.6.1"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^7.0.0"
 black = "^22.0.0"
+
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
 build-backend = "poetry.core.masonry.api"
 
 [tool.poetry.scripts]
-portscan = "portscan:main"
+portscan = "src.portscan:main"

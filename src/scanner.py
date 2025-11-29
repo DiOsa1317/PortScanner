@@ -1,8 +1,8 @@
-from scan_result import ScanResult
-from tcp_scanner import TCPScapyScanner
-from udp_scanner import UDPScapyScanner
-from protocol_detector import ProtocolDetector
-from console_query_classes import Port
+from src.scan_result import ScanResult
+from src.tcp_scanner import TCPScapyScanner
+from src.udp_scanner import UDPScapyScanner
+from src.protocol_detector import ProtocolDetector
+from src.console_query_classes import Port
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
 

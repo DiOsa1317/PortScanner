@@ -1,11 +1,7 @@
-#!/usr/bin/env python3
 import sys
-import os
 
-sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-
-from console_query_parser import ConsoleQueryParser
-from scanner import PortScanner
+from src.console_query_parser import ConsoleQueryParser
+from src.scanner import PortScanner
 
 def main():
     try:
@@ -24,9 +20,11 @@ def main():
 
         scanner.print_results(results)
 
-    except KeyboardInterrupt:
+    except KeyboardInterrupt as e:
+        print(e)
         sys.exit(1)
     except Exception as e:
+        print(e)
         sys.exit(1)
 
 if __name__ == "__main__":
