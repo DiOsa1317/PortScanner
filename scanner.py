@@ -3,6 +3,7 @@ from tcp_scanner import TCPRawScanner
 from udp_scanner import UDPRawScanner
 from protocol_detector import ProtocolDetector
 from console_query_classes import Port
+from concurrent.futures import ThreadPoolExecutor
 
 
 class PortScanner:
@@ -22,28 +23,42 @@ class PortScanner:
     def scan(self, target_ip: str, ports: list[Port]) -> list[ScanResult]:
         all_results = []
 
-        for port_spec in ports:
-            protocol = "UDP" if port_spec.is_udp_protocol else "TCP"
+        if self.num_threads > 1:
+            # Многопоточное сканирование
+            with ThreadPoolExecutor(max_workers=self.num_threads) as executor:
+                futures = []
+                for port_spec in ports:
+                    future = executor.submit(
+                        self._scan_single_port, target_ip, port_spec
+                    )
+                    futures.append(future)
 
-            if self.verbose:
-                print(f"Scanning {protocol} port {port_spec.start_port_address}...")
-
-            # Сканируем один порт (start_port_address == end_port_address после парсинга)
-            if port_spec.is_udp_protocol:
-                result = self.udp_scanner.scan_port(
-                    target_ip, port_spec.start_port_address
-                )
-            else:
-                result = self.tcp_scanner.scan_port(
-                    target_ip, port_spec.start_port_address
-                )
-
-            all_results.append(result)
+                for future in futures:
+                    all_results.append(future.result())
+        else:
+            # Однопоточное сканирование
+            for port_spec in ports:
+                result = self._scan_single_port(target_ip, port_spec)
+                all_results.append(result)
 
         if self.guess:
             self._detect_protocols(target_ip, all_results)
 
         return all_results
+
+    def _scan_single_port(self, target_ip: str, port_spec: Port) -> ScanResult:
+        protocol = "UDP" if port_spec.is_udp_protocol else "TCP"
+
+        if self.verbose:
+            print(f"Scanning {protocol} port {port_spec.start_port_address}...")
+
+        # Сканируем один порт
+        if port_spec.is_udp_protocol:
+            result = self.udp_scanner.scan_port(target_ip, port_spec.start_port_address)
+        else:
+            result = self.tcp_scanner.scan_port(target_ip, port_spec.start_port_address)
+
+        return result
 
     def _detect_protocols(self, target_ip: str, results: list[ScanResult]):
         for result in results:

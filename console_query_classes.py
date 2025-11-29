@@ -1,5 +1,6 @@
 from dataclasses import dataclass
 
+
 @dataclass
 class Options:
     timeout: float
@@ -7,11 +8,13 @@ class Options:
     guess: bool
     verbose: bool
 
+
 @dataclass
 class Port:
     is_udp_protocol: bool
     start_port_address: int
     end_port_address: int
+
 
 @dataclass
 class ConsoleQuery:

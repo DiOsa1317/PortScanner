@@ -20,66 +20,73 @@ class TCPRawScanner:
                 socket.AF_INET, socket.SOCK_RAW, socket.IPPROTO_TCP
             )
             self._socket.settimeout(0.1)
+            print("✓ TCP Raw socket created successfully")  # DEBUG
         except PermissionError:
             print("ERROR: Need root privileges for TCP SYN scan! Use sudo.")
             self._socket = None
+        except Exception as e:
+            print(f"ERROR creating TCP socket: {e}")
+            self._socket = None
 
     @staticmethod
-    def create_syn_packet(dest_ip: str, dest_port: int) -> bytes:
+    def create_syn_packet(dest_port: int) -> bytes:
         source_port = random.randint(1024, 65535)
+        seq_num = random.randint(0, 4294967295)
 
+        # Упрощенный TCP header без checksum (система может сама его посчитать)
         tcp_header = struct.pack(
             "!HHLLBBHHH",
-            source_port,
-            dest_port,
-            random.randint(0, 4294967295),  # seq_num
-            0,  # ack_num
-            0x50,  # offset=5
+            source_port,  # source port
+            dest_port,  # dest port
+            seq_num,  # sequence number
+            0,  # ack number
+            5 << 4,  # data offset
             0x02,  # SYN flag
-            5840,  # window
-            0,  # checksum
-            0,  # urg_ptr
+            8192,  # window size
+            0,  # checksum = 0 (система посчитает)
+            0,  # urgent pointer
         )
 
-        ip_header = struct.pack(
-            "!BBHHHBBH4s4s",
-            0x45,
-            0,
-            20 + len(tcp_header),  # version_ihl, tos, total_len
-            random.randint(1, 65535),
-            0x4000,  # id, flags
-            64,
-            socket.IPPROTO_TCP,
-            0,  # ttl, protocol, checksum
-            socket.inet_aton("0.0.0.0"),  # source ip
-            socket.inet_aton(dest_ip),
-        )
-
-        return ip_header + tcp_header
+        return tcp_header
 
     @staticmethod
-    def parse_response(packet: bytes, target_ip: str) -> tuple[int, bool]:
-        if len(packet) < 40:
-            return 0, False
-        try:
-            ip_header = packet[0:20]
-            iph = struct.unpack("!BBHHHBBH4s4s", ip_header)
-            protocol = iph[6]
-            source_ip = socket.inet_ntoa(iph[8])
+    def parse_response(packet: bytes) -> tuple[int, bool]:
+        print(f"DEBUG: Response length: {len(packet)} bytes")
 
-            if protocol != socket.IPPROTO_TCP or source_ip != target_ip:
+        try:
+            # Если пакет содержит IP заголовок (обычно 20+ байт)
+            if len(packet) >= 40:
+                # Пропускаем IP заголовок (20 байт) и берем TCP заголовок
+                tcp_header = packet[20:40]
+            else:
+                # Предполагаем что это только TCP заголовок
+                tcp_header = packet
+
+            if len(tcp_header) < 20:
                 return 0, False
 
-            tcp_header = packet[20:40]
-            tcph = struct.unpack("!HHLLBBHHH", tcp_header)
-            source_port, flags = tcph[0], tcph[5]
+            # Распарсим TCP заголовок
+            # Формат: src_port(2), dest_port(2), seq(4), ack(4), data_offset_reserved_flags(2), window(2), checksum(2), urg_ptr(2)
+            src_port, dest_port, seq, ack, offset_flags, window, checksum, urg_ptr = (
+                struct.unpack("!HHLLHHHH", tcp_header)
+            )
 
-            if flags == 0x12:  # SYN-ACK
-                return source_port, True
-            elif flags == 0x14:  # RST
-                return source_port, False
-        except:
-            pass
+            # Извлекаем флаги (младшие 6 бит из offset_flags)
+            flags = offset_flags & 0x3F
+
+            print(
+                f"DEBUG: Ports: src={src_port}, dest={dest_port}, flags=0x{flags:02x}"
+            )
+
+            if flags == 0x12:  # SYN-ACK (SYN=1, ACK=1)
+                print(f"DEBUG: SYN-ACK received for port {dest_port}")
+                return dest_port, True
+            elif flags == 0x14:  # RST-ACK (RST=1, ACK=1)
+                print(f"DEBUG: RST received for port {dest_port}")
+                return dest_port, False
+
+        except Exception as e:
+            print(f"DEBUG: Parse error: {e}")
 
         return 0, False
 
@@ -89,9 +96,9 @@ class TCPRawScanner:
 
         try:
             # Отправляем SYN
-            packet = TCPRawScanner.create_syn_packet(target_ip, port)
+            packet = TCPRawScanner.create_syn_packet(port)
             send_time = time.time()
-            self._socket.sendto(packet, (target_ip, 0))
+            self._socket.sendto(packet, (target_ip, port))
 
             start_time = time.time()
             while time.time() - start_time < self._timeout:
@@ -101,7 +108,7 @@ class TCPRawScanner:
                         continue
                     response, address = self._socket.recvfrom(1024)
                     response_port, is_response_port_open = TCPRawScanner.parse_response(
-                        response, target_ip
+                        response
                     )
                     if response_port != port:
                         continue

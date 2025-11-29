@@ -8,6 +8,7 @@ GUESS = "--guess"
 V = "-v"
 VERBOSE = "--verbose"
 
+
 @dataclass
 class ScanResult:
     protocol: str  # "TCP" или "UDP"

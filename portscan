@@ -2,7 +2,6 @@
 import sys
 import os
 
-# Добавляем текущую директорию в путь чтобы импортировать наши модули
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 from console_query_parser import ConsoleQueryParser
@@ -13,7 +12,7 @@ def main():
         # Парсим аргументы командной строки (первый аргумент - "portscan")
         console_query = ConsoleQueryParser.convert_args_to_console_query(sys.argv)
 
-        # Создаем сканер
+
         scanner = PortScanner(
             timeout=console_query.options.timeout,
             verbose=console_query.options.verbose,
@@ -21,10 +20,8 @@ def main():
             num_threads=console_query.options.num_threads
         )
 
-        # Выполняем сканирование
         results = scanner.scan(console_query.ip_address, console_query.ports)
 
-        # Выводим результаты
         scanner.print_results(results)
 
     except KeyboardInterrupt:
