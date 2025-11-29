@@ -5,7 +5,6 @@ class ConsoleQueryParser:
 
     @staticmethod
     def convert_args_to_console_query(arguments):
-        print(f"DEBUG: All arguments: {arguments}")  # ДОБАВИТЬ ЭТУ СТРОКУ
 
         if len(arguments) < 3:
             raise ValueError("Usage: portscan [OPTIONS] IP_ADDRESS [PORT_SPECS...]")
@@ -23,7 +22,6 @@ class ConsoleQueryParser:
 
         while arg_index < arg_len:
             arg = arguments[arg_index]
-            print(f"DEBUG: Processing argument {arg_index}: '{arg}'")  # ДОБАВИТЬ
 
             if arg == "--timeout":
                 try:
@@ -54,8 +52,6 @@ class ConsoleQueryParser:
             positional_args.append(arguments[arg_index])
             arg_index += 1
 
-        print(f"DEBUG: Positional args: {positional_args}")  # ДОБАВИТЬ
-
         if not positional_args:
             raise ValueError("IP address is required")
 
@@ -73,13 +69,11 @@ class ConsoleQueryParser:
 
     @staticmethod
     def parse_positional_args(positional_args):
-        print(f"DEBUG: Parsing positional: {positional_args}")  # ДОБАВИТЬ
 
         ip_address = positional_args[0]
         ports = []
 
         for arg in positional_args[1:]:
-            print(f"DEBUG: Parsing port spec: '{arg}'")  # ДОБАВИТЬ
             ports.extend(ConsoleQueryParser.parse_port(arg))
 
         return ip_address, ports
@@ -100,11 +94,8 @@ class ConsoleQueryParser:
         ports_spec = parts[1]
         ports = []
 
-        print(f"DEBUG: Parsing {protocol} ports: '{ports_spec}'")  # DEBUG
-
         # Обработка списка портов: 80,443,1000-2000
         for part in ports_spec.split(","):
-            print(f"DEBUG: Processing part: '{part}'")  # DEBUG
             if "-" in part:
                 # Диапазон портов: 1000-2000
                 addresses = part.split("-")
@@ -118,8 +109,6 @@ class ConsoleQueryParser:
                     raise ValueError("Port numbers must be integers")
 
                 ConsoleQueryParser.validate_port(start_point, end_point)
-
-                print(f"DEBUG: Range {start_point}-{end_point}")  # DEBUG
 
                 # Создаем отдельный Port для каждого порта в диапазоне
                 for port in range(start_point, end_point + 1):
@@ -138,7 +127,6 @@ class ConsoleQueryParser:
                     raise ValueError(f"Port must be a number: {part}")
 
                 ConsoleQueryParser.validate_port(port_num, port_num)
-                print(f"DEBUG: Single port {port_num}")  # DEBUG
                 ports.append(
                     Port(
                         is_udp_protocol=is_udp,
@@ -147,7 +135,6 @@ class ConsoleQueryParser:
                     )
                 )
 
-        print(f"DEBUG: Total ports to scan: {len(ports)}")  # DEBUG
         return ports
 
     @staticmethod

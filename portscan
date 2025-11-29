@@ -25,10 +25,8 @@ def main():
         scanner.print_results(results)
 
     except KeyboardInterrupt:
-        print("\nScan interrupted by user")
         sys.exit(1)
     except Exception as e:
-        print(f"Error: {e}")
         sys.exit(1)
 
 if __name__ == "__main__":

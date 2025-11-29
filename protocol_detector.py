@@ -46,10 +46,10 @@ class ProtocolDetector:
 
     def detect(self, host: str, port: int, transport: str) -> str:
         if transport == "TCP":
-            if self.detect_http(host, port):
-                return "HTTP"
-            elif self.detect_echo(host, port):
+            if self.detect_echo(host, port):
                 return "ECHO"
+            elif self.detect_http(host, port):
+                return "HTTP"
         elif transport == "UDP":
             if self.detect_dns(host, port):
                 return "DNS"
